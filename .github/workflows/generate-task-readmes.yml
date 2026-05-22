@@ -138,20 +138,10 @@ jobs:
           readme.write_text(new_content, encoding="utf-8")
           PY
 
-      - name: Require automation token
-        env:
-          AUTOMATION_PR_TOKEN: ${{ secrets.AUTOMATION_PR_TOKEN }}
-        shell: bash
-        run: |
-          if [ -z "$AUTOMATION_PR_TOKEN" ]; then
-            echo "::error::Missing secret AUTOMATION_PR_TOKEN. Add a PAT with repo scope, or enable 'Allow GitHub Actions to create and approve pull requests' in repository settings."
-            exit 1
-          fi
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.AUTOMATION_PR_TOKEN }}
+          token: ${{ github.token }}
           branch: automation/generate-task-readmes
           delete-branch: true
           commit-message: "docs: generate task README references"
