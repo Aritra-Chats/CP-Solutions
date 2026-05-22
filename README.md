@@ -53,6 +53,7 @@ Platform/
 This repository includes a workflow that:
 - Traverses the repository in `platform/contest/task` format
 - Generates or updates `README.md` inside each task folder
+- Detects question links in a platform-agnostic way from `problem.url` / `problem.txt` (or existing task README question links)
 - Raises a PR with all generated documentation changes
 
 Run it from **Actions → Generate Task READMEs**.

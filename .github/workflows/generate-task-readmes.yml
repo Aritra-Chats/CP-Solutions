@@ -43,29 +43,48 @@ jobs:
           }
 
           detect_problem_url() {
-            local platform_name="$1"
-            local contest_name="$2"
-            local task_name="$3"
-            local problem_url=""
+            local task_dir="$1"
+            python3 - "$task_dir" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
 
-            if [ "$platform_name" = "AtCoder" ]; then
-              local contest_slug=""
-              case "$contest_name" in
-                "Educational DP Contest")
-                  contest_slug="dp"
-                  ;;
-              esac
+          task_dir = Path(sys.argv[1])
+          url_pattern = re.compile(r"https?://[^\s)]+")
+          markdown_link_pattern = re.compile(r"\[[^\]]+\]\((https?://[^)\s]+)\)")
 
-              if [ -n "$contest_slug" ]; then
-                local task_code=""
-                task_code="$(printf '%s' "$task_name" | sed -E 's/^([A-Za-z0-9]+).*/\1/' | tr '[:upper:]' '[:lower:]')"
-                if [ -n "$task_code" ]; then
-                  problem_url="https://atcoder.jp/contests/${contest_slug}/tasks/${contest_slug}_${task_code}"
-                fi
-              fi
-            fi
+          def first_external_url(text: str) -> str:
+              markdown_match = markdown_link_pattern.search(text)
+              if markdown_match:
+                  return markdown_match.group(1)
+              plain_match = url_pattern.search(text)
+              if plain_match:
+                  return plain_match.group(0)
+              return ""
 
-            echo "$problem_url"
+          for candidate in (task_dir / "problem.url", task_dir / "problem.txt"):
+              if candidate.is_file():
+                  found = first_external_url(candidate.read_text(encoding="utf-8"))
+                  if found:
+                      print(found)
+                      raise SystemExit(0)
+
+          readme = task_dir / "README.md"
+          if readme.is_file():
+              lines = readme.read_text(encoding="utf-8").splitlines()
+              for line in lines:
+                  if "- **Question:**" in line:
+                      found = first_external_url(line)
+                      if found:
+                          print(found)
+                          raise SystemExit(0)
+              found = first_external_url(readme.read_text(encoding="utf-8"))
+              if found:
+                  print(found)
+                  raise SystemExit(0)
+
+          print("")
+          PY
           }
 
           while IFS= read -r -d '' platform_dir; do
@@ -78,7 +97,7 @@ jobs:
                 task_name="$(basename "$task_dir")"
                 task_readme="$task_dir/README.md"
                 solution_file="$(detect_solution_file "$task_dir")"
-                problem_url="$(detect_problem_url "$platform_name" "$contest_name" "$task_name")"
+                problem_url="$(detect_problem_url "$task_dir")"
 
                 {
                   printf '# %s\n\n' "${task_name}"
@@ -124,9 +143,8 @@ jobs:
                   escaped_task_name="${task_name//|/\\|}"
                   relative_task_path="${task_dir#./}"
                   encoded_task_path="$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "${relative_task_path}")"
-                  readme_link="./${encoded_task_path}/README.md"
                   solution_file="$(detect_solution_file "$task_dir")"
-                  problem_url="$(detect_problem_url "$platform_name" "$contest_name" "$task_name")"
+                  problem_url="$(detect_problem_url "$task_dir")"
 
                   if [ -n "$solution_file" ]; then
                     encoded_solution_file="$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "${solution_file}")"
