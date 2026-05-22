@@ -3,9 +3,11 @@ name: Generate Task READMEs
 on:
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   generate-task-readmes:
@@ -135,20 +137,18 @@ jobs:
           readme.write_text(new_content, encoding="utf-8")
           PY
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
-        with:
-          branch: automation/generate-task-readmes
-          delete-branch: true
-          commit-message: "docs: generate task README references"
-          title: "docs: generate task README references"
-          body: |
-            ## Summary
-            - Generated/updated README.md files for each task directory.
-            - Traversed repository in platform/contest/task structure.
+      - name: Commit and push generated files
+        shell: bash
+        run: |
+          set -euo pipefail
 
-            ## Notes
-            - This PR was created automatically by the workflow.
-          labels: |
-            documentation
-            automated pr
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No changes detected."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: generate task README references"
+          git push
