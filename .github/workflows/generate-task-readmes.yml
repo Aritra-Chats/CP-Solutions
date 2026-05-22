@@ -1,0 +1,81 @@
+name: Generate Task READMEs
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate-task-readmes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate README for each task folder
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          while IFS= read -r -d '' platform_dir; do
+            platform_name="$(basename "$platform_dir")"
+
+            while IFS= read -r -d '' contest_dir; do
+              contest_name="$(basename "$contest_dir")"
+
+              while IFS= read -r -d '' task_dir; do
+                task_name="$(basename "$task_dir")"
+                task_readme="$task_dir/README.md"
+
+                solution_file=""
+                if [ -f "$task_dir/Main.java" ]; then
+                  solution_file="Main.java"
+                elif compgen -G "$task_dir/*.cpp" > /dev/null; then
+                  solution_file="$(basename "$(ls "$task_dir"/*.cpp | head -n 1)")"
+                elif compgen -G "$task_dir/*.py" > /dev/null; then
+                  solution_file="$(basename "$(ls "$task_dir"/*.py | head -n 1)")"
+                elif compgen -G "$task_dir/*.kt" > /dev/null; then
+                  solution_file="$(basename "$(ls "$task_dir"/*.kt | head -n 1)")"
+                fi
+
+                cat > "$task_readme" <<DOC
+# ${task_name}
+
+## Reference
+
+- **Platform:** ${platform_name}
+- **Contest:** ${contest_name}
+- **Task:** ${task_name}
+
+## Solution File
+
+- [${solution_file:-Add solution file}](./${solution_file:-})
+DOC
+
+                echo "Generated: $task_readme"
+              done < <(find "$contest_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+            done < <(find "$platform_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+          done < <(find . -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name '.github' -print0 | sort -z)
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automation/generate-task-readmes
+          delete-branch: true
+          commit-message: "docs: generate task README references"
+          title: "docs: generate task README references"
+          body: |
+            ## Summary
+            - Generated/updated README.md files for each task directory.
+            - Traversed repository in platform/contest/task structure.
+
+            ## Notes
+            - This PR was created automatically by the workflow.
+          labels: |
+            documentation
+            automated pr
