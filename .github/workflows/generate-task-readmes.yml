@@ -71,18 +71,20 @@ jobs:
 
           readme = task_dir / "README.md"
           if readme.is_file():
-              lines = readme.read_text(encoding="utf-8").splitlines()
+              readme_content = readme.read_text(encoding="utf-8")
+              lines = readme_content.splitlines()
               for line in lines:
                   if "- **Question:**" in line:
                       found = first_external_url(line)
                       if found:
                           print(found)
                           raise SystemExit(0)
-              found = first_external_url(readme.read_text(encoding="utf-8"))
+              found = first_external_url(readme_content)
               if found:
                   print(found)
                   raise SystemExit(0)
 
+          # Empty stdout means no direct external problem URL was detected.
           print("")
           PY
           }
