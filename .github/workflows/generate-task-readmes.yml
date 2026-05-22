@@ -67,7 +67,7 @@ jobs:
                   found = extract_first_url(candidate.read_text(encoding="utf-8"))
                   if found:
                       print(found)
-                      raise SystemExit(0)
+                      sys.exit(0)
 
           readme = task_dir / "README.md"
           if readme.is_file():
@@ -78,13 +78,13 @@ jobs:
                       found = extract_first_url(line)
                       if found:
                           print(found)
-                          raise SystemExit(0)
+                          sys.exit(0)
               found = extract_first_url(readme_content)
               if found:
                   print(found)
-                  raise SystemExit(0)
+                  sys.exit(0)
 
-          raise SystemExit(0)
+          sys.exit(0)
           PY
           }
 
