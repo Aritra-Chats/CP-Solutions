@@ -42,6 +42,32 @@ jobs:
             echo "$solution_file"
           }
 
+          detect_problem_url() {
+            local platform_name="$1"
+            local contest_name="$2"
+            local task_name="$3"
+            local problem_url=""
+
+            if [ "$platform_name" = "AtCoder" ]; then
+              local contest_slug=""
+              case "$contest_name" in
+                "Educational DP Contest")
+                  contest_slug="dp"
+                  ;;
+              esac
+
+              if [ -n "$contest_slug" ]; then
+                local task_code=""
+                task_code="$(printf '%s' "$task_name" | sed -E 's/^([A-Za-z0-9]+).*/\1/' | tr '[:upper:]' '[:lower:]')"
+                if [ -n "$task_code" ]; then
+                  problem_url="https://atcoder.jp/contests/${contest_slug}/tasks/${contest_slug}_${task_code}"
+                fi
+              fi
+            fi
+
+            echo "$problem_url"
+          }
+
           while IFS= read -r -d '' platform_dir; do
             platform_name="$(basename "$platform_dir")"
 
@@ -52,13 +78,19 @@ jobs:
                 task_name="$(basename "$task_dir")"
                 task_readme="$task_dir/README.md"
                 solution_file="$(detect_solution_file "$task_dir")"
+                problem_url="$(detect_problem_url "$platform_name" "$contest_name" "$task_name")"
 
                 {
                   printf '# %s\n\n' "${task_name}"
                   printf '## Reference\n\n'
                   printf -- '- **Platform:** %s\n' "${platform_name}"
                   printf -- '- **Contest:** %s\n' "${contest_name}"
-                  printf -- '- **Task:** %s\n\n' "${task_name}"
+                  printf -- '- **Task:** %s\n' "${task_name}"
+                  if [ -n "$problem_url" ]; then
+                    printf -- '- **Question:** [%s](%s)\n\n' "${problem_url}" "${problem_url}"
+                  else
+                    printf -- '- **Question:** Not available\n\n'
+                  fi
                   printf '## Solution File\n\n'
                   printf -- '- [%s](./%s)\n' "${solution_file:-Add solution file}" "${solution_file:-}"
                 } > "$task_readme"
@@ -84,8 +116,8 @@ jobs:
                 echo "<details open>"
                 echo "<summary><strong>${contest_name}</strong></summary>"
                 echo
-                echo "| Task | Solution | Problem Notes |"
-                echo "|------|----------|---------------|"
+                echo "| Task | Solution | Question |"
+                echo "|------|----------|----------|"
 
                 while IFS= read -r -d '' task_dir; do
                   task_name="$(basename "$task_dir")"
@@ -94,6 +126,7 @@ jobs:
                   encoded_task_path="$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "${relative_task_path}")"
                   readme_link="./${encoded_task_path}/README.md"
                   solution_file="$(detect_solution_file "$task_dir")"
+                  problem_url="$(detect_problem_url "$platform_name" "$contest_name" "$task_name")"
 
                   if [ -n "$solution_file" ]; then
                     encoded_solution_file="$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "${solution_file}")"
@@ -102,7 +135,13 @@ jobs:
                     solution_cell="-"
                   fi
 
-                  echo "| ${escaped_task_name} | ${solution_cell} | [README.md](${readme_link}) |"
+                  if [ -n "$problem_url" ]; then
+                    question_cell="[Link](${problem_url})"
+                  else
+                    question_cell="[README.md](${readme_link})"
+                  fi
+
+                  echo "| ${escaped_task_name} | ${solution_cell} | ${question_cell} |"
                 done < <(find "$contest_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
 
                 echo

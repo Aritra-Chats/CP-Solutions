@@ -38,10 +38,10 @@ Platform/
 <details open>
 <summary><strong>Educational DP Contest</strong></summary>
 
-| Task | Solution | Problem Notes |
-|------|----------|---------------|
-| C - Vacation | [Main.java](./AtCoder/Educational%20DP%20Contest/C%20-%20Vacation/Main.java) | [README.md](./AtCoder/Educational%20DP%20Contest/C%20-%20Vacation/README.md) |
-| D - Knabsack-1 | [Main.java](./AtCoder/Educational%20DP%20Contest/D%20-%20Knabsack-1/Main.java) | [README.md](./AtCoder/Educational%20DP%20Contest/D%20-%20Knabsack-1/README.md) |
+| Task | Solution | Question |
+|------|----------|----------|
+| C - Vacation | [Main.java](./AtCoder/Educational%20DP%20Contest/C%20-%20Vacation/Main.java) | [Link](https://atcoder.jp/contests/dp/tasks/dp_c) |
+| D - Knabsack-1 | [Main.java](./AtCoder/Educational%20DP%20Contest/D%20-%20Knabsack-1/Main.java) | [Link](https://atcoder.jp/contests/dp/tasks/dp_d) |
 
 </details>
 <!-- SOLVED_PROBLEMS:END -->
