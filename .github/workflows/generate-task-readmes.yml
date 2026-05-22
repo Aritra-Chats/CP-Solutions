@@ -3,6 +3,9 @@ name: Generate Task READMEs
 on:
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: write
   pull-requests: write
@@ -138,6 +141,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
+          token: ${{ github.token }}
           branch: automation/generate-task-readmes
           delete-branch: true
           commit-message: "docs: generate task README references"
