@@ -53,7 +53,7 @@ jobs:
           url_pattern = re.compile(r"https?://[^\s)]+")
           markdown_link_pattern = re.compile(r"\[[^\]]+\]\((https?://[^)\s]+)\)")
 
-          def first_external_url(text: str) -> str:
+          def extract_first_url(text: str) -> str:
               markdown_match = markdown_link_pattern.search(text)
               if markdown_match:
                   return markdown_match.group(1)
@@ -64,7 +64,7 @@ jobs:
 
           for candidate in (task_dir / "problem.url", task_dir / "problem.txt"):
               if candidate.is_file():
-                  found = first_external_url(candidate.read_text(encoding="utf-8"))
+                  found = extract_first_url(candidate.read_text(encoding="utf-8"))
                   if found:
                       print(found)
                       raise SystemExit(0)
@@ -75,11 +75,11 @@ jobs:
               lines = readme_content.splitlines()
               for line in lines:
                   if "- **Question:**" in line:
-                      found = first_external_url(line)
+                      found = extract_first_url(line)
                       if found:
                           print(found)
                           raise SystemExit(0)
-              found = first_external_url(readme_content)
+              found = extract_first_url(readme_content)
               if found:
                   print(found)
                   raise SystemExit(0)
