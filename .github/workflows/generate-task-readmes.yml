@@ -62,6 +62,91 @@ DOC
             done < <(find "$platform_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
           done < <(find . -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name '.github' -print0 | sort -z)
 
+      - name: Update Solved Problems section in root README
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          generated_file="$(mktemp)"
+
+          {
+            echo "## ✅ Solved Problems"
+            echo
+
+            while IFS= read -r -d '' platform_dir; do
+              platform_name="$(basename "$platform_dir")"
+              echo "### ${platform_name}"
+              echo
+
+              while IFS= read -r -d '' contest_dir; do
+                contest_name="$(basename "$contest_dir")"
+                echo "<details open>"
+                echo "<summary><strong>${contest_name}</strong></summary>"
+                echo
+                echo "| Task | Solution | Problem Notes |"
+                echo "|------|----------|---------------|"
+
+                while IFS= read -r -d '' task_dir; do
+                  task_name="$(basename "$task_dir")"
+                  escaped_task_name="${task_name//|/\\|}"
+                  relative_task_path="${task_dir#./}"
+                  encoded_task_path="$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "${relative_task_path}")"
+                  readme_link="./${encoded_task_path}/README.md"
+
+                  solution_file=""
+                  if [ -f "$task_dir/Main.java" ]; then
+                    solution_file="Main.java"
+                  elif compgen -G "$task_dir/*.cpp" > /dev/null; then
+                    solution_file="$(basename "$(ls "$task_dir"/*.cpp | head -n 1)")"
+                  elif compgen -G "$task_dir/*.py" > /dev/null; then
+                    solution_file="$(basename "$(ls "$task_dir"/*.py | head -n 1)")"
+                  elif compgen -G "$task_dir/*.kt" > /dev/null; then
+                    solution_file="$(basename "$(ls "$task_dir"/*.kt | head -n 1)")"
+                  fi
+
+                  if [ -n "$solution_file" ]; then
+                    encoded_solution_file="$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "${solution_file}")"
+                    solution_cell="[${solution_file}](./${encoded_task_path}/${encoded_solution_file})"
+                  else
+                    solution_cell="-"
+                  fi
+
+                  echo "| ${escaped_task_name} | ${solution_cell} | [README.md](${readme_link}) |"
+                done < <(find "$contest_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+
+                echo
+                echo "</details>"
+                echo
+              done < <(find "$platform_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+            done < <(find . -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name '.github' -print0 | sort -z)
+          } > "$generated_file"
+
+          export GENERATED_FILE="$generated_file"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          readme = Path("README.md")
+          start_marker = "<!-- SOLVED_PROBLEMS:START -->"
+          end_marker = "<!-- SOLVED_PROBLEMS:END -->"
+          generated = Path(os.environ["GENERATED_FILE"]).read_text(encoding="utf-8").rstrip()
+          content = readme.read_text(encoding="utf-8")
+
+          start = content.find(start_marker)
+          end = content.find(end_marker)
+          if start == -1 or end == -1 or end < start:
+            raise SystemExit("Missing or invalid solved-problems markers in README.md")
+
+          new_content = (
+              content[: start + len(start_marker)]
+              + "\n"
+              + generated
+              + "\n"
+              + content[end:]
+          )
+          readme.write_text(new_content, encoding="utf-8")
+          PY
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
