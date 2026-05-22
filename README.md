@@ -40,7 +40,7 @@ Platform/
 | Task | Solution | Problem Notes |
 |------|----------|---------------|
 | C - Vacation | [Main.java](./AtCoder/Educational%20DP%20Contest/C%20-%20Vacation/Main.java) | [README.md](./AtCoder/Educational%20DP%20Contest/C%20-%20Vacation/README.md) |
-| D - Knabsack-1 | [Main.java](./AtCoder/Educational%20DP%20Contest/D%20-%20Knabsack-1/Main.java) | [README.md](./AtCoder/Educational%20DP%20Contest/D%20-%20Knabsack-1/README.md) |
+| D - Knapsack-1 | [Main.java](./AtCoder/Educational%20DP%20Contest/D%20-%20Knabsack-1/Main.java) | [README.md](./AtCoder/Educational%20DP%20Contest/D%20-%20Knabsack-1/README.md) |
 
 </details>
 
