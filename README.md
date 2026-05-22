@@ -38,10 +38,10 @@ Platform/
 <details open>
 <summary><strong>Educational DP Contest</strong></summary>
 
-| Task | Solution | Problem Notes |
-|------|----------|---------------|
-| C - Vacation | [Main.java](./AtCoder/Educational%20DP%20Contest/C%20-%20Vacation/Main.java) | [README.md](./AtCoder/Educational%20DP%20Contest/C%20-%20Vacation/README.md) |
-| D - Knabsack-1 | [Main.java](./AtCoder/Educational%20DP%20Contest/D%20-%20Knabsack-1/Main.java) | [README.md](./AtCoder/Educational%20DP%20Contest/D%20-%20Knabsack-1/README.md) |
+| Task | Solution | Question |
+|------|----------|----------|
+| C - Vacation | [Main.java](./AtCoder/Educational%20DP%20Contest/C%20-%20Vacation/Main.java) | [Link](https://atcoder.jp/contests/dp/tasks/dp_c) |
+| D - Knabsack-1 | [Main.java](./AtCoder/Educational%20DP%20Contest/D%20-%20Knabsack-1/Main.java) | [Link](https://atcoder.jp/contests/dp/tasks/dp_d) |
 
 </details>
 <!-- SOLVED_PROBLEMS:END -->
@@ -53,6 +53,7 @@ Platform/
 This repository includes a workflow that:
 - Traverses the repository in `platform/contest/task` format
 - Generates or updates `README.md` inside each task folder
+- Detects question links in a platform-agnostic way from `problem.url` / `problem.txt` (or existing task README question links)
 - Raises a PR with all generated documentation changes
 
 Run it from **Actions → Generate Task READMEs**.

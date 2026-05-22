@@ -42,6 +42,52 @@ jobs:
             echo "$solution_file"
           }
 
+          detect_problem_url() {
+            local task_dir="$1"
+            python3 - "$task_dir" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+
+          task_dir = Path(sys.argv[1])
+          url_pattern = re.compile(r"https?://[^\s)]+")
+          markdown_link_pattern = re.compile(r"\[[^\]]+\]\((https?://[^)\s]+)\)")
+
+          def extract_first_url(text: str) -> str:
+              markdown_match = markdown_link_pattern.search(text)
+              if markdown_match:
+                  return markdown_match.group(1)
+              plain_match = url_pattern.search(text)
+              if plain_match:
+                  return plain_match.group(0)
+              return ""
+
+          for candidate in (task_dir / "problem.url", task_dir / "problem.txt"):
+              if candidate.is_file():
+                  found = extract_first_url(candidate.read_text(encoding="utf-8"))
+                  if found:
+                      print(found)
+                      sys.exit(0)
+
+          readme = task_dir / "README.md"
+          if readme.is_file():
+              readme_content = readme.read_text(encoding="utf-8")
+              lines = readme_content.splitlines()
+              for line in lines:
+                  if "- **Question:**" in line:
+                      found = extract_first_url(line)
+                      if found:
+                          print(found)
+                          sys.exit(0)
+              found = extract_first_url(readme_content)
+              if found:
+                  print(found)
+                  sys.exit(0)
+
+          sys.exit(0)
+          PY
+          }
+
           while IFS= read -r -d '' platform_dir; do
             platform_name="$(basename "$platform_dir")"
 
@@ -52,13 +98,19 @@ jobs:
                 task_name="$(basename "$task_dir")"
                 task_readme="$task_dir/README.md"
                 solution_file="$(detect_solution_file "$task_dir")"
+                problem_url="$(detect_problem_url "$task_dir")"
 
                 {
                   printf '# %s\n\n' "${task_name}"
                   printf '## Reference\n\n'
                   printf -- '- **Platform:** %s\n' "${platform_name}"
                   printf -- '- **Contest:** %s\n' "${contest_name}"
-                  printf -- '- **Task:** %s\n\n' "${task_name}"
+                  printf -- '- **Task:** %s\n' "${task_name}"
+                  if [ -n "$problem_url" ]; then
+                    printf -- '- **Question:** [View Problem](%s)\n\n' "${problem_url}"
+                  else
+                    printf -- '- **Question:** No problem URL available\n\n'
+                  fi
                   printf '## Solution File\n\n'
                   printf -- '- [%s](./%s)\n' "${solution_file:-Add solution file}" "${solution_file:-}"
                 } > "$task_readme"
@@ -84,16 +136,16 @@ jobs:
                 echo "<details open>"
                 echo "<summary><strong>${contest_name}</strong></summary>"
                 echo
-                echo "| Task | Solution | Problem Notes |"
-                echo "|------|----------|---------------|"
+                echo "| Task | Solution | Question |"
+                echo "|------|----------|----------|"
 
                 while IFS= read -r -d '' task_dir; do
                   task_name="$(basename "$task_dir")"
                   escaped_task_name="${task_name//|/\\|}"
                   relative_task_path="${task_dir#./}"
                   encoded_task_path="$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "${relative_task_path}")"
-                  readme_link="./${encoded_task_path}/README.md"
                   solution_file="$(detect_solution_file "$task_dir")"
+                  problem_url="$(detect_problem_url "$task_dir")"
 
                   if [ -n "$solution_file" ]; then
                     encoded_solution_file="$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "${solution_file}")"
@@ -102,7 +154,13 @@ jobs:
                     solution_cell="-"
                   fi
 
-                  echo "| ${escaped_task_name} | ${solution_cell} | [README.md](${readme_link}) |"
+                  if [ -n "$problem_url" ]; then
+                    question_cell="[Link](${problem_url})"
+                  else
+                    question_cell="-"
+                  fi
+
+                  echo "| ${escaped_task_name} | ${solution_cell} | ${question_cell} |"
                 done < <(find "$contest_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
 
                 echo
