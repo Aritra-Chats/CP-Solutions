@@ -50,19 +50,15 @@ jobs:
                 task_readme="$task_dir/README.md"
                 solution_file="$(detect_solution_file "$task_dir")"
 
-                cat > "$task_readme" <<DOC
-# ${task_name}
-
-## Reference
-
-- **Platform:** ${platform_name}
-- **Contest:** ${contest_name}
-- **Task:** ${task_name}
-
-## Solution File
-
-- [${solution_file:-Add solution file}](./${solution_file:-})
-DOC
+                {
+                  printf '# %s\n\n' "${task_name}"
+                  printf '## Reference\n\n'
+                  printf -- '- **Platform:** %s\n' "${platform_name}"
+                  printf -- '- **Contest:** %s\n' "${contest_name}"
+                  printf -- '- **Task:** %s\n\n' "${task_name}"
+                  printf '## Solution File\n\n'
+                  printf -- '- [%s](./%s)\n' "${solution_file:-Add solution file}" "${solution_file:-}"
+                } > "$task_readme"
 
                 echo "Generated: $task_readme"
               done < <(find "$contest_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
