@@ -84,8 +84,7 @@ jobs:
                   print(found)
                   raise SystemExit(0)
 
-          # Empty stdout means no direct external problem URL was detected.
-          print("")
+          raise SystemExit(0)
           PY
           }
 
@@ -110,7 +109,7 @@ jobs:
                   if [ -n "$problem_url" ]; then
                     printf -- '- **Question:** [View Problem](%s)\n\n' "${problem_url}"
                   else
-                    printf -- '- **Question:** See README.md for details\n\n'
+                    printf -- '- **Question:** No problem URL available\n\n'
                   fi
                   printf '## Solution File\n\n'
                   printf -- '- [%s](./%s)\n' "${solution_file:-Add solution file}" "${solution_file:-}"
