@@ -139,11 +139,12 @@ jobs:
           PY
 
       - name: Require automation token
-        if: ${{ secrets.AUTOMATION_PR_TOKEN == '' }}
         shell: bash
         run: |
-          echo "::error::Missing secret AUTOMATION_PR_TOKEN. Add a PAT with repo scope, or enable 'Allow GitHub Actions to create and approve pull requests' in repository settings."
-          exit 1
+          if [ -z "${{ secrets.AUTOMATION_PR_TOKEN }}" ]; then
+            echo "::error::Missing secret AUTOMATION_PR_TOKEN. Add a PAT with repo scope, or enable 'Allow GitHub Actions to create and approve pull requests' in repository settings."
+            exit 1
+          fi
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
