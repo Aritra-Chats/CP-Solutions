@@ -89,7 +89,7 @@ jobs:
                   if [ -n "$problem_url" ]; then
                     printf -- '- **Question:** [View Problem](%s)\n\n' "${problem_url}"
                   else
-                    printf -- '- **Question:** No direct link available\n\n'
+                    printf -- '- **Question:** See README.md for details\n\n'
                   fi
                   printf '## Solution File\n\n'
                   printf -- '- [%s](./%s)\n' "${solution_file:-Add solution file}" "${solution_file:-}"
@@ -138,7 +138,7 @@ jobs:
                   if [ -n "$problem_url" ]; then
                     question_cell="[Link](${problem_url})"
                   else
-                    question_cell="[README.md](${readme_link})"
+                    question_cell="-"
                   fi
 
                   echo "| ${escaped_task_name} | ${solution_cell} | ${question_cell} |"
