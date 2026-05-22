@@ -17,10 +17,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate README for each task folder
+      - name: Generate task READMEs and update root README
         shell: bash
         run: |
           set -euo pipefail
+
+          detect_solution_file() {
+            local task_dir="$1"
+            local solution_file=""
+
+            if [ -f "$task_dir/Main.java" ]; then
+              solution_file="Main.java"
+            elif compgen -G "$task_dir/*.cpp" > /dev/null; then
+              solution_file="$(basename "$(ls "$task_dir"/*.cpp | head -n 1)")"
+            elif compgen -G "$task_dir/*.py" > /dev/null; then
+              solution_file="$(basename "$(ls "$task_dir"/*.py | head -n 1)")"
+            elif compgen -G "$task_dir/*.kt" > /dev/null; then
+              solution_file="$(basename "$(ls "$task_dir"/*.kt | head -n 1)")"
+            fi
+
+            echo "$solution_file"
+          }
 
           while IFS= read -r -d '' platform_dir; do
             platform_name="$(basename "$platform_dir")"
@@ -31,17 +48,7 @@ jobs:
               while IFS= read -r -d '' task_dir; do
                 task_name="$(basename "$task_dir")"
                 task_readme="$task_dir/README.md"
-
-                solution_file=""
-                if [ -f "$task_dir/Main.java" ]; then
-                  solution_file="Main.java"
-                elif compgen -G "$task_dir/*.cpp" > /dev/null; then
-                  solution_file="$(basename "$(ls "$task_dir"/*.cpp | head -n 1)")"
-                elif compgen -G "$task_dir/*.py" > /dev/null; then
-                  solution_file="$(basename "$(ls "$task_dir"/*.py | head -n 1)")"
-                elif compgen -G "$task_dir/*.kt" > /dev/null; then
-                  solution_file="$(basename "$(ls "$task_dir"/*.kt | head -n 1)")"
-                fi
+                solution_file="$(detect_solution_file "$task_dir")"
 
                 cat > "$task_readme" <<DOC
 # ${task_name}
@@ -61,11 +68,6 @@ DOC
               done < <(find "$contest_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
             done < <(find "$platform_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
           done < <(find . -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name '.github' -print0 | sort -z)
-
-      - name: Update Solved Problems section in root README
-        shell: bash
-        run: |
-          set -euo pipefail
 
           generated_file="$(mktemp)"
 
@@ -92,17 +94,7 @@ DOC
                   relative_task_path="${task_dir#./}"
                   encoded_task_path="$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "${relative_task_path}")"
                   readme_link="./${encoded_task_path}/README.md"
-
-                  solution_file=""
-                  if [ -f "$task_dir/Main.java" ]; then
-                    solution_file="Main.java"
-                  elif compgen -G "$task_dir/*.cpp" > /dev/null; then
-                    solution_file="$(basename "$(ls "$task_dir"/*.cpp | head -n 1)")"
-                  elif compgen -G "$task_dir/*.py" > /dev/null; then
-                    solution_file="$(basename "$(ls "$task_dir"/*.py | head -n 1)")"
-                  elif compgen -G "$task_dir/*.kt" > /dev/null; then
-                    solution_file="$(basename "$(ls "$task_dir"/*.kt | head -n 1)")"
-                  fi
+                  solution_file="$(detect_solution_file "$task_dir")"
 
                   if [ -n "$solution_file" ]; then
                     encoded_solution_file="$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "${solution_file}")"
